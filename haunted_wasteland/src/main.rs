@@ -4,7 +4,7 @@ use std::env::args;
 use std::process::exit;
 use regex::Regex;
 
-#[derive(Eq, Hash)]
+#[derive(Debug, Eq, Hash)]
 struct Node {
     name : String, 
     left : String, 
@@ -56,6 +56,8 @@ fn main() {
         }
     }
 
+    // println!("{}", nodes.len());
+
     for node in nodes.iter_mut() {
 
         // println!("Updating node {}\nLeft: {}\nRight: {}", node.name, node.left, node.right);
@@ -80,31 +82,75 @@ fn main() {
         }
     }
 
-    let mut iterator = names.iter_mut();
+    let mut step_nodes : Vec<usize> = Vec::new();
+    let a_regex = Regex::new(r"[A-Z]{2}A").expect("invalid regex");
+    let z_regex = Regex::new(r"[A-Z]{2}Z").expect("invalid regex");
 
-    let mut curr_node = nodes.get(iterator.position(|x| x == &"AAA").unwrap()).unwrap();
-    let mut i = moves.chars();
-    let mut counter = 0;
+    for i in 0..(nodes.len()) {
+        let name = &nodes.get(i).unwrap().name;
 
-    while curr_node.name != "ZZZ" {
-        let check = i.next();
-        let step;
-
-        if check.is_some() {
-            step = check.unwrap();
-        } else {
-            i = moves.chars();
-            step = i.next().unwrap();
+        if a_regex.is_match(name) {
+            // println!("Added {:?} to step from index {}", nodes.get(i).unwrap(), i);
+            step_nodes.push(i);
         }
-
-        if step == 'R' {
-            curr_node = nodes.get(curr_node.right_index).unwrap();
-        } else {
-            curr_node = nodes.get(curr_node.left_index).unwrap();
-        }
-
-        counter += 1;
     }
 
-    println!("{}", counter);
+    let mut cycles : Vec<usize> = Vec::with_capacity(step_nodes.len());
+    let mut i = moves.chars();
+    let mut counter : usize = 0;
+
+    // println!("Step: {:?}", step_nodes);
+
+    for start_index in step_nodes {
+        let mut curr_node = nodes.get(start_index).unwrap();
+
+        while !z_regex.is_match(&curr_node.name) {
+            let check = i.next();
+            let step;
+
+            if check.is_some() {
+                step = check.unwrap();
+            } else {
+                i = moves.chars();
+                step = i.next().unwrap();
+            }
+
+            if step == 'R' {
+                curr_node = nodes.get(curr_node.right_index).unwrap();
+            } else {
+                curr_node = nodes.get(curr_node.left_index).unwrap();
+            }
+
+            counter += 1;
+        }
+
+        cycles.push(counter);
+
+        i = moves.chars();
+        counter = 0;
+        
+        // println!("Move: {}", step);
+
+        // println!("Step: {:?}", step_nodes);
+    }
+
+    let mut mult = *cycles.get(0).unwrap();
+
+    for index in 1..(cycles.len()) {
+        mult = lcm(*cycles.get(index).unwrap(), mult);
+    }
+
+    println!("{}", mult);
+}
+
+fn gcd (a: usize, b : usize) -> usize {
+    if a == 0 {
+        b
+    } else {
+        gcd (b % a, a)
+    }
+}
+
+fn lcm (a : usize, b : usize) -> usize {
+    (a / gcd(a, b)) * b
 }
