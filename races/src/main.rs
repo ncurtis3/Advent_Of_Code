@@ -12,23 +12,30 @@ fn main() {
         exit(1);
     }
 
+    //storing in file name to be read from using command line args
     let fname = &args[1];
+
+    //creating a new file reader for the file
     let reader = BufReader::new(File::open(fname).expect("Couldn't open file"));
 
     let mut raw_text : Vec<String> = Vec::new();
     let mut times : Vec<usize> = Vec::with_capacity(4);
     let mut records : Vec<usize> = Vec::with_capacity(4);
 
+    //reading in every line from the file and pushing it onto the end of raw_text
     for line in reader.lines() {
         raw_text.push(line.expect("Couldn't read line from file"));
     }
 
+    //creating a new regex to match for any positive integer
     let num_regex = Regex::new(r"[0-9]+").unwrap();
 
+    //reads the time that the race took and adds it to times
     for num_string in num_regex.find_iter(raw_text.get(0).unwrap()) {
         times.push(num_string.as_str().parse().expect("Couldn't read num for times"));
     }
 
+    //reads the distance that the race went for and adds it to records
     for num_string in num_regex.find_iter(raw_text.get(1).unwrap()) {
         records.push(num_string.as_str().parse().expect("Couldn't read num for record"));
     }
@@ -58,8 +65,6 @@ fn main() {
 }
 
 fn min_time(high : usize, low : usize, time : usize, record : usize) -> usize {
-    // println!("Min_time");
-    // println!("High: {}\nLow: {}\n", high, low);
 
     if high < low {
         return usize::MAX;
@@ -84,8 +89,6 @@ fn min_time(high : usize, low : usize, time : usize, record : usize) -> usize {
     let pass1 = dist1 > record;
     let pass2 = dist2 > record;
     let pass3 = dist3 > record;
-
-    // println!("Pass1: {}\nPass2: {}\nPass3: {}", pass1, pass2, pass3);
 
     if !pass1 && !pass2 && !pass3 {
         let check1 = min_time(high, num3 + 1, time, record);
